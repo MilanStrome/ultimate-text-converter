@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ultimate Text Converter</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --card2:#fbfcfe;
+      --text:#172033;
+      --muted:#667085;
+      --border:#dfe4ea;
+      --accent:#2563eb;
+      --accent2:#eef2ff;
+      --success:#0f9d58;
+      --danger:#b42318;
+      --shadow:0 10px 30px rgba(16,24,40,.08);
+    }
+    body.dark{
+      --bg:#0f172a;
+      --card:#111827;
+      --card2:#0b1220;
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --border:#273449;
+      --accent:#60a5fa;
+      --accent2:#172554;
+      --success:#4ade80;
+      --danger:#fb7185;
+      --shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      transition:.2s;
+    }
+    .wrap{
+      max-width:1180px;
+      margin:34px auto;
+      padding:0 20px 40px;
+    }
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:20px;
+    }
+    h1{margin:0 0 6px;font-size:34px}
+    .sub{margin:0;color:var(--muted)}
+    .panel{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:20px;
+      margin-bottom:20px;
+    }
+    label{display:block;font-weight:800;margin-bottom:8px}
+    textarea{
+      width:100%;
+      min-height:125px;
+      resize:vertical;
+      padding:16px;
+      border:1px solid var(--border);
+      background:var(--card2);
+      color:var(--text);
+      border-radius:14px;
+      font-size:18px;
+      outline:none;
+      transition:.2s;
+    }
+    textarea:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(37,99,235,.12);
+    }
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      color:var(--muted);
+      font-size:13px;
+      margin-top:10px;
+    }
+    .toolbar,.emoji-bar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:9px;
+      margin-top:13px;
+    }
+    button{
+      border:0;
+      border-radius:10px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:750;
+      font-size:14px;
+      transition:.15s;
+    }
+    button:hover{transform:translateY(-1px)}
+    .primary{background:var(--accent);color:white}
+    .secondary{background:var(--accent2);color:var(--text);border:1px solid var(--border)}
+    .danger{background:#fff1f2;color:var(--danger)}
+    body.dark .danger{background:#3f1722}
+    .emoji{
+      background:var(--card2);
+      border:1px solid var(--border);
+      font-size:19px;
+      padding:8px 11px;
+    }
+    .section-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin:28px 0 12px;
+    }
+    .section-title h2{margin:0;font-size:22px}
+    .section-title span{color:var(--muted);font-size:13px}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:15px;
+      padding:15px;
+      box-shadow:0 4px 16px rgba(16,24,40,.05);
+    }
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .name{font-weight:850}
+    .actions{display:flex;gap:7px;flex-shrink:0}
+    .copy{background:#eef8f1;color:var(--success)}
+    body.dark .copy{background:#143021}
+    .use{background:var(--accent2);color:var(--text);border:1px solid var(--border)}
+    .output{
+      min-height:58px;
+      border:1px dashed var(--border);
+      background:var(--card2);
+      border-radius:11px;
+      padding:13px;
+      font-size:18px;
+      line-height:1.48;
+      white-space:pre-wrap;
+      word-break:break-word;
+      max-height:180px;
+      overflow:auto;
+    }
+    .footer{
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      margin-top:24px;
+    }
+    .toast{
+      position:fixed;
+      right:20px;
+      bottom:20px;
+      background:#111827;
+      color:white;
+      padding:12px 16px;
+      border-radius:10px;
+      opacity:0;
+      transform:translateY(10px);
+      pointer-events:none;
+      transition:.2s;
+      z-index:9999;
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+    @media(max-width:780px){
+      .grid{grid-template-columns:1fr}
+      .header{align-items:center}
+      h1{font-size:28px}
+      .actions button{padding:8px 10px;font-size:12px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <h1>Ultimate Text Converter</h1>
+      <p class="sub">Case converter + fancy Unicode fonts + text cleanup + emoji tools.</p>
+    </div>
+    <button id="themeBtn" class="secondary">🌙 Dark</button>
+  </div>
+
+  <div class="panel">
+    <label for="inputText">Enter your text</label>
+    <textarea id="inputText" placeholder="Type or paste your text here..."></textarea>
+
+    <div class="meta">
+      <span id="chars">Characters: 0</span>
+      <span id="words">Words: 0</span>
+      <span id="lines">Lines: 0</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="primary" id="copyInputBtn">Copy Input</button>
+      <button class="secondary" id="sampleBtn">Load Sample</button>
+      <button class="secondary" id="copyAllBtn">Copy All Results</button>
+      <button class="danger" id="clearBtn">Clear</button>
+    </div>
+
+    <div class="emoji-bar" id="emojiBar" title="Click to insert emoji at cursor">
+      <button class="emoji">✅</button>
+      <button class="emoji">❌</button>
+      <button class="emoji">⚠️</button>
+      <button class="emoji">🔴</button>
+      <button class="emoji">🟢</button>
+      <button class="emoji">🟡</button>
+      <button class="emoji">🔵</button>
+      <button class="emoji">⭐</button>
+      <button class="emoji">🔥</button>
+      <button class="emoji">📌</button>
+      <button class="emoji">🚨</button>
+      <button class="emoji">💡</button>
+      <button class="emoji">👉</button>
+      <button class="emoji">✔️</button>
+      <button class="emoji">⏳</button>
+      <button class="emoji">📢</button>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h2>Fancy Unicode Text</h2>
+    <span>Copy-paste styles that work in many normal text fields</span>
+  </div>
+  <div class="grid" id="fancyResults"></div>
+
+  <div class="section-title">
+    <h2>Text Case & Formatting</h2>
+    <span>Useful for messages, filenames, labels, code and posts</span>
+  </div>
+  <div class="grid" id="caseResults"></div>
+
+
+  <div class="section-title">
+    <h2>Text Cleanup & Utilities</h2>
+    <span>Quick cleanup and line tools</span>
+  </div>
+  <div class="grid" id="utilityResults"></div>
+
+  <div class="footer">
+    Unicode style appearance depends on the destination app and available fonts. True text color cannot be preserved in plain-text fields.
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const input = document.getElementById('inputText');
+const caseResults = document.getElementById('caseResults');
+const fancyResults = document.getElementById('fancyResults');
+const utilityResults = document.getElementById('utilityResults');
+const toast = document.getElementById('toast');
+
+function wordsOf(s){
+  return s.trim().match(/[A-Za-z0-9]+(?:['’][A-Za-z0-9]+)?/g) || [];
+}
+function splitWords(s){
+  return s
+    .replace(/([a-z0-9])([A-Z])/g,'$1 $2')
+    .replace(/[_\-./\\]+/g,' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+function titleCase(s){
+  return s.toLowerCase().replace(/\b\p{L}/gu, c => c.toUpperCase());
+}
+function sentenceCase(s){
+  const x = s.toLowerCase();
+  return x.replace(/(^\s*\p{L}|[.!?]\s+\p{L})/gu, m => m.toUpperCase());
+}
+function camelCase(s){
+  const w = splitWords(s.toLowerCase());
+  return w.map((x,i)=>i===0?x:(x.charAt(0).toUpperCase()+x.slice(1))).join('');
+}
+function pascalCase(s){
+  return splitWords(s.toLowerCase()).map(x=>x.charAt(0).toUpperCase()+x.slice(1)).join('');
+}
+function snakeCase(s){ return splitWords(s.toLowerCase()).join('_'); }
+function kebabCase(s){ return splitWords(s.toLowerCase()).join('-'); }
+function constantCase(s){ return splitWords(s.toUpperCase()).join('_'); }
+function dotCase(s){ return splitWords(s.toLowerCase()).join('.'); }
+function pathCase(s){ return splitWords(s.toLowerCase()).join('/'); }
+function alternatingCase(s){
+  let up = false;
+  return [...s].map(ch=>{
+    if(/[a-z]/i.test(ch)){ up=!up; return up?ch.toUpperCase():ch.toLowerCase(); }
+    return ch;
+  }).join('');
+}
+function inverseCase(s){
+  return [...s].map(ch => ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase()).join('');
+}
+function reverseText(s){ return [...s].reverse().join(''); }
+function reverseWords(s){ return s.split(/(\s+)/).map(x => /\s+/.test(x) ? x : [...x].reverse().join('')).join(''); }
+function removeExtraSpaces(s){ return s.replace(/[ \t]+/g,' ').replace(/ *\n */g,'\n').trim(); }
+function removeLineBreaks(s){ return s.replace(/\s*\n+\s*/g,' ').replace(/[ \t]+/g,' ').trim(); }
+function trimLines(s){ return s.split('\n').map(x=>x.trim()).join('\n'); }
+function sortLines(s){ return s.split('\n').filter(x=>x.trim()!=='').sort((a,b)=>a.localeCompare(b)).join('\n'); }
+function uniqueLines(s){
+  const seen = new Set();
+  return s.split('\n').filter(line=>{
+    const k=line.trim();
+    if(!k || seen.has(k)) return false;
+    seen.add(k); return true;
+  }).join('\n');
+}
+function numberedLines(s){
+  return s.split('\n').filter(x=>x.trim()).map((x,i)=>`${i+1}. ${x.trim()}`).join('\n');
+}
+function bulletLines(s){
+  return s.split('\n').filter(x=>x.trim()).map(x=>`• ${x.trim()}`).join('\n');
+}
+function checkLines(s){
+  return s.split('\n').filter(x=>x.trim()).map(x=>`✅ ${x.trim()}`).join('\n');
+}
+function slugify(s){
+  return s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+
+function mapFromPairs(normal, styled){
+  const map={};
+  [...normal].forEach((ch,i)=>map[ch]=[...styled][i]);
+  return map;
+}
+const U="ABCDEFGHIJKLMNOPQRSTUVWXYZ", L="abcdefghijklmnopqrstuvwxyz", D="0123456789";
+const maps = {
+  bold:{
+    ...mapFromPairs(U,"𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙"),
+    ...mapFromPairs(L,"𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳"),
+    ...mapFromPairs(D,"𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗")
+  },
+  italic:{
+    ...mapFromPairs(U,"𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"),
+    ...mapFromPairs(L,"𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧")
+  },
+  boldItalic:{
+    ...mapFromPairs(U,"𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁"),
+    ...mapFromPairs(L,"𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛")
+  },
+  monospace:{
+    ...mapFromPairs(U,"𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉"),
+    ...mapFromPairs(L,"𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣"),
+    ...mapFromPairs(D,"𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿")
+  },
+  double:{
+    ...mapFromPairs(U,"𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ"),
+    ...mapFromPairs(L,"𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫"),
+    ...mapFromPairs(D,"𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡")
+  },
+  sans:{
+    ...mapFromPairs(U,"𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹"),
+    ...mapFromPairs(L,"𝖺𝖻𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄𝗅𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓"),
+    ...mapFromPairs(D,"𝟢𝟣𝟤𝟥𝟦𝟧𝟨𝟩𝟪𝟫")
+  },
+  sansBold:{
+    ...mapFromPairs(U,"𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭"),
+    ...mapFromPairs(L,"𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇"),
+    ...mapFromPairs(D,"𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵")
+  },
+  fraktur:{
+    ...mapFromPairs(U,"𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ"),
+    ...mapFromPairs(L,"𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷")
+  },
+  circled:{
+    ...mapFromPairs(U,"ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ"),
+    ...mapFromPairs(L,"ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ"),
+    ...mapFromPairs(D,"⓪①②③④⑤⑥⑦⑧⑨")
+  }
+};
+function transform(s,map){ return [...s].map(ch=>map[ch]||ch).join(''); }
+function underline(s){ return [...s].map(ch=>ch==='\n'?ch:ch+'\u0332').join(''); }
+function strike(s){ return [...s].map(ch=>ch==='\n'?ch:ch+'\u0336').join(''); }
+function smallCaps(s){
+  const m={a:'ᴀ',b:'ʙ',c:'ᴄ',d:'ᴅ',e:'ᴇ',f:'ꜰ',g:'ɢ',h:'ʜ',i:'ɪ',j:'ᴊ',k:'ᴋ',l:'ʟ',m:'ᴍ',n:'ɴ',o:'ᴏ',p:'ᴘ',q:'ǫ',r:'ʀ',s:'ꜱ',t:'ᴛ',u:'ᴜ',v:'ᴠ',w:'ᴡ',x:'x',y:'ʏ',z:'ᴢ'};
+  return [...s].map(ch=>m[ch.toLowerCase()]||ch).join('');
+}
+function fullWidth(s){
+  return [...s].map(ch=>{
+    const c=ch.charCodeAt(0);
+    if(c===32) return '　';
+    if(c>=33 && c<=126) return String.fromCharCode(c+0xFEE0);
+    return ch;
+  }).join('');
+}
+
+const caseStyles = [
+  ["UPPERCASE", s=>s.toUpperCase()],
+  ["lowercase", s=>s.toLowerCase()],
+  ["Title Case", titleCase],
+  ["Sentence case", sentenceCase],
+  ["camelCase", camelCase],
+  ["PascalCase", pascalCase],
+  ["snake_case", snakeCase],
+  ["kebab-case", kebabCase],
+  ["CONSTANT_CASE", constantCase],
+  ["dot.case", dotCase],
+  ["path/case", pathCase],
+  ["aLtErNaTiNg CaSe", alternatingCase],
+  ["iNVERSE cASE", inverseCase],
+  ["Reverse Text", reverseText],
+  ["Reverse Each Word", reverseWords],
+  ["URL Slug", slugify]
+];
+
+const fancyStyles = [
+  ["Bold", s=>transform(s,maps.bold)],
+  ["Italic", s=>transform(s,maps.italic)],
+  ["Bold Italic", s=>transform(s,maps.boldItalic)],
+  ["Monospace", s=>transform(s,maps.monospace)],
+  ["Double Struck", s=>transform(s,maps.double)],
+  ["Sans Serif", s=>transform(s,maps.sans)],
+  ["Sans Bold", s=>transform(s,maps.sansBold)],
+  ["Fraktur", s=>transform(s,maps.fraktur)],
+  ["Circled", s=>transform(s,maps.circled)],
+  ["Small Caps", smallCaps],
+  ["Full Width", fullWidth],
+  ["Underline", underline],
+  ["Strikethrough", strike]
+];
+
+const utilities = [
+  ["Remove Extra Spaces", removeExtraSpaces],
+  ["Remove Line Breaks", removeLineBreaks],
+  ["Trim Every Line", trimLines],
+  ["Sort Lines A-Z", sortLines],
+  ["Remove Duplicate Lines", uniqueLines],
+  ["Number Each Line", numberedLines],
+  ["Bullet Each Line", bulletLines],
+  ["✅ Checklist Lines", checkLines]
+];
+
+function showToast(msg="Copied!"){
+  toast.textContent=msg;
+  toast.classList.add('show');
+  clearTimeout(window.__tt);
+  window.__tt=setTimeout(()=>toast.classList.remove('show'),1300);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); }
+  catch{
+    const ta=document.createElement('textarea');
+    ta.value=text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  showToast();
+}
+function makeCard(name,value){
+  const card=document.createElement('div'); card.className='card';
+  const top=document.createElement('div'); top.className='top';
+  const title=document.createElement('div'); title.className='name'; title.textContent=name;
+  const actions=document.createElement('div'); actions.className='actions';
+  const useBtn=document.createElement('button'); useBtn.className='use'; useBtn.textContent='Use';
+  useBtn.onclick=()=>{ input.value=value; input.focus(); render(); showToast('Moved to input'); };
+  const copyBtn=document.createElement('button'); copyBtn.className='copy'; copyBtn.textContent='Copy';
+  copyBtn.onclick=()=>copyText(value);
+  actions.append(useBtn,copyBtn);
+  top.append(title,actions);
+  const out=document.createElement('div'); out.className='output'; out.textContent=value;
+  card.append(top,out);
+  return card;
+}
+function renderGroup(el,arr,text){
+  el.innerHTML='';
+  arr.forEach(([name,fn])=>el.appendChild(makeCard(name,fn(text))));
+}
+function updateMeta(){
+  const t=input.value;
+  document.getElementById('chars').textContent=`Characters: ${[...t].length}`;
+  document.getElementById('words').textContent=`Words: ${wordsOf(t).length}`;
+  document.getElementById('lines').textContent=`Lines: ${t ? t.split('\n').length : 0}`;
+}
+function render(){
+  const text=input.value || "Your text will appear here";
+  updateMeta();
+  renderGroup(caseResults,caseStyles,text);
+  renderGroup(fancyResults,fancyStyles,text);
+  renderGroup(utilityResults,utilities,text);
+}
+input.addEventListener('input',render);
+
+document.getElementById('sampleBtn').onclick=()=>{
+  input.value="Please complete this task today\nSend report to Michael\nFollow up tomorrow";
+  input.focus(); render();
+};
+document.getElementById('clearBtn').onclick=()=>{
+  input.value=""; input.focus(); render();
+};
+document.getElementById('copyInputBtn').onclick=()=>{
+  if(!input.value){showToast('Nothing to copy');return;}
+  copyText(input.value);
+};
+document.getElementById('copyAllBtn').onclick=()=>{
+  if(!input.value.trim()){showToast('Enter text first');return;}
+  const groups=[
+    ["TEXT CASE",caseStyles],
+    ["FANCY TEXT",fancyStyles],
+    ["UTILITIES",utilities]
+  ];
+  let out=[];
+  groups.forEach(([heading,arr])=>{
+    out.push(`=== ${heading} ===`);
+    arr.forEach(([name,fn])=>out.push(`${name}:\n${fn(input.value)}`));
+    out.push('');
+  });
+  copyText(out.join('\n\n'));
+};
+
+document.querySelectorAll('.emoji').forEach(btn=>{
+  btn.onclick=()=>{
+    const emoji=btn.textContent;
+    const start=input.selectionStart, end=input.selectionEnd;
+    const before=input.value.slice(0,start), after=input.value.slice(end);
+    input.value=before+emoji+' '+after;
+    const pos=start+emoji.length+1;
+    input.focus(); input.setSelectionRange(pos,pos); render();
+  };
+});
+
+document.getElementById('themeBtn').onclick=()=>{
+  document.body.classList.toggle('dark');
+  const dark=document.body.classList.contains('dark');
+  document.getElementById('themeBtn').textContent=dark?'☀️ Light':'🌙 Dark';
+  localStorage.setItem('textToolTheme',dark?'dark':'light');
+};
+if(localStorage.getItem('textToolTheme')==='dark'){
+  document.body.classList.add('dark');
+  document.getElementById('themeBtn').textContent='☀️ Light';
+}
+render();
+</script>
+</body>
+</html>
